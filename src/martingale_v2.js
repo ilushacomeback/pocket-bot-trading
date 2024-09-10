@@ -5,17 +5,17 @@ const { By, Key, logging, Actions } = require('selenium-webdriver');
 
 // node src/test.js
 
-const timesSell = {};
 const actions = [];
 const profits = [];
 let history = [];
 const dateTime = {};
 let lastTimeBuy = null;
+let lastCloseTime = null;
 // const start = 10; // минимальная ставка
 // const finish = 1; // максимальная ставка
 // const koef = 2; // коэффициент умножения
 // const time = 60; // время сделки
-const period = 60; // время свечи
+// const period = 60; // время свечи
 // const company = 'Криптовалюты'; // название раздела один в один как написано на сайте
 // const valute = 'Cardano OTC'; // название пары на торги один в один как написано на сайте
 
@@ -34,6 +34,7 @@ const times = {
 let startSum = null;
 let minPrice = null;
 let koef = null;
+let period = null;
 
 async function example() {
   try {
@@ -41,6 +42,7 @@ async function example() {
     koef = data.koef;
     startSum = data.start;
     minPrice = data.start;
+    period = data.period;
   } catch (e) {
     console.log(e);
     throw new Error('Проблема в init.js');
@@ -55,17 +57,18 @@ async function example() {
       if (!decodeData) continue;
 
       if ('openTimestamp' in decodeData) {
-        const { openTimestamp, closeTimestamp } = decodeData;
+        const { openTimestamp, closeTimestamp, openPrice, command } =
+          decodeData;
         actions.push({
-          open: openTimestamp,
-          close: closeTimestamp,
-          isEnd: true,
+          openTime: openTimestamp,
+          closeTime: closeTimestamp,
+          openPrice,
+          command,
+          isActive: true
         });
       } else if ('deals' in decodeData) {
         profits.push(decodeData.profit);
       }
-
-      // console.log(decodeData);
 
       if (decodeData.asset && decodeData.period === period) {
         asset = decodeData.asset;
@@ -75,6 +78,12 @@ async function example() {
         const [, curTime, curPrice] = decodeData[0];
         const time = Math.trunc(curTime);
         const lastTime = time - period;
+        const lastAction = actions.at(-1);
+
+        if (lastAction) {
+          const { closeTime } = lastAction;
+          lastCloseTime = closeTime - 1;
+        }
 
         if (time in dateTime) continue;
 
@@ -99,53 +108,49 @@ async function example() {
             }
             history = [];
           }
-          console.log(dateTime);
-          console.log(profits);
-        } else {
-          history.push(decodeData);
-          const lastAction = actions.at(-1);
+        } else if (time === lastCloseTime && actions.at(-1).isActive) {
+          const action = actions.at(-1);
+          const openPrice = action.openPrice
+          const command = action.command
+          action.isActive = false
 
-          if (lastAction && lastAction.close < time && lastAction.isEnd) {
-            lastAction.isEnd = false;
-            console.log(lastAction);
+          if (
+            (openPrice > curPrice && command === 0) ||
+            (openPrice < curPrice && command === 1)
+          ) {
+            const newPrice = startSum * koef;
+            startSum = newPrice;
+            await driver
+              .findElement(
+                By.xpath(`//div[contains(@class, 'value__val')]/input`)
+              )
+              .sendKeys(Key.chord(Key.CONTROL, 'a'), `${newPrice}`);
+          } else if (openPrice !== curPrice) {
+            startSum = minPrice;
+            await driver
+              .findElement(
+                By.xpath(`//div[contains(@class, 'value__val')]/input`)
+              )
+              .sendKeys(Key.chord(Key.CONTROL, 'a'), `${startSum}`);
+          }
 
-            const { open, close } = dateTime[lastTimeBuy];
+          const { open } = dateTime[lastTimeBuy];
 
-            if (profits.at(-1) < 0) {
-              const newPrice = startSum * koef;
-              startSum = newPrice;
-              await driver
-                .findElement(
-                  By.xpath(`//div[contains(@class, 'value__val')]/input`)
-                )
-                .sendKeys(Key.chord(Key.CONTROL, 'a'), `${newPrice}`);
-            } else if (profits.at(-1) === 0) {
-              await driver
-                .findElement(
-                  By.xpath(`//div[contains(@class, 'value__val')]/input`)
-                )
-                .sendKeys(Key.chord(Key.CONTROL, 'a'), `${startSum}`);
-            } else {
-              startSum = minPrice;
-              await driver
-                .findElement(
-                  By.xpath(`//div[contains(@class, 'value__val')]/input`)
-                )
-                .sendKeys(Key.chord(Key.CONTROL, 'a'), `${startSum}`);
-            }
+          await driver.sleep(1000)
 
-            console.log('last', dateTime[lastTimeBuy]);
-            if (open > close) {
-              await driver
-                .findElement(By.css('body'))
-                .sendKeys(Key.chord(Key.SHIFT, 's'));
-            } else {
-              await driver
-                .findElement(By.css('body'))
-                .sendKeys(Key.chord(Key.SHIFT, 'w'));
-            }
+          console.log({ lastTimeBuy: { open, curPrice } })
+
+          if (open > curPrice) {
+            await driver
+              .findElement(By.css('body'))
+              .sendKeys(Key.chord(Key.SHIFT, 's'));
+          } else if (open < curPrice) {
+            await driver
+              .findElement(By.css('body'))
+              .sendKeys(Key.chord(Key.SHIFT, 'w'));
           }
         }
+        history.push(decodeData);
       }
     }
   }
@@ -171,7 +176,7 @@ function checkValues() {}
 //   openPrice: 56382.65,
 //   copyTicket: '',
 //   closePrice: 0,
-//   command: 0,
+//   command: 0, // 0 = вверх, 1 = вниз
 //   asset: 'BTCUSD_otc',
 //   nickname: 'DEMO',
 //   avatarUser: '',

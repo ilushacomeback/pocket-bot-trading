@@ -5,11 +5,11 @@ const { By, Key } = require('selenium-webdriver');
 
 const start = 10; // минимальная ставка
 const finish = 1; // максимальная ставка
-const koef = 2; // коэффициент умножения
+const koef = 2.5; // коэффициент умножения
 const time = 60; // время сделки
 const period = 60; // время свечи
 const company = 'Криптовалюты'; // название раздела один в один как написано на сайте
-const valute = 'Bitcoin OTC'; // название пары на торги один в один как написано на сайте
+const valute = 'Cardano OTC'; // название пары на торги один в один как написано на сайте
 
 let resultStart = start;
 
@@ -120,11 +120,7 @@ async function init() {
 
   await activeHotKeys.click();
 
-  //   const call = await driver.findElement(By.className('btn btn-call'));
-
-  //   await call.click();
-
-  return {start, koef};
+  return {start, koef, period};
 }
 
 module.exports = init;
