@@ -5,32 +5,12 @@ const { By, Key, logging } = require('selenium-webdriver');
 
 // node src/test.js
 
-const timesSell = {};
 const actions = [];
 const profits = [];
 let history = [];
 const dateTime = {};
 let lastTimeBuy = null;
-// const start = 10; // минимальная ставка
-// const finish = 1; // максимальная ставка
-// const koef = 2; // коэффициент умножения
-// const time = 60; // время сделки
-// const period = 60; // время свечи
-// const company = 'Криптовалюты'; // название раздела один в один как написано на сайте
-// const valute = 'Cardano OTC'; // название пары на торги один в один как написано на сайте
-
 let asset = null;
-// let resultStart = start;
-
-const times = {
-  5: 'S5',
-  15: 'S15',
-  30: 'S30',
-  60: 'M1',
-  180: 'M3',
-  300: 'M5',
-};
-
 let startSum = null;
 let minPrice = null;
 let koef = null;
@@ -107,8 +87,8 @@ async function example() {
             lastAction.isActive = false;
 
             const { open, close } = dateTime[lastTimeBuy];
-
-            if (profits.at(-1) < 0) {
+            const lastProfit = profits.at(-1)
+            if (lastProfit < 0) {
               const newPrice = startSum * koef;
               startSum = newPrice;
               await driver
@@ -116,7 +96,7 @@ async function example() {
                   By.xpath(`//div[contains(@class, 'value__val')]/input`)
                 )
                 .sendKeys(Key.chord(Key.CONTROL, 'a'), `${newPrice}`);
-            } else if (profits.at(-1) > 0 && profits.at(-2) < 0) {
+            } else if (lastProfit > 0 && profits.at(-2) < 0) {
               startSum = minPrice;
               await driver
                 .findElement(
