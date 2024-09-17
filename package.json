@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "v1": "node src/martingale_v1.js",
-    "v2": "node src/martingale_v2.js"
+    "v2": "node src/martingale_v2.js",
+    "v3": "node src/v3.js"
   },
   "keywords": [],
   "author": "",

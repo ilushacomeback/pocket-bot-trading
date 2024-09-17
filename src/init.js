@@ -3,15 +3,15 @@ const { By, Key } = require('selenium-webdriver');
 
 // node src/test.js
 
-const start = 10; // минимальная ставка
+const initSum = 10; // минимальная ставка
+const puncts = 20 //макс. разница в пунтках за секунду до закрытия (если меньше, то ждет закрытия сделки)
 const finish = 1; // максимальная ставка
-const koef = 2.5; // коэффициент умножения
-const time = 60; // время сделки
-const period = 60; // время свечи
+const koef = 2; // коэффициент умножения
+const time = 15; // время сделки
+const period = 15; // время свечи
 const company = 'Криптовалюты'; // название раздела один в один как написано на сайте
 const valute = 'Bitcoin OTC'; // название пары на торги один в один как написано на сайте
 
-let resultStart = start;
 
 const times = {
   5: 'S5',
@@ -27,64 +27,66 @@ async function init() {
 
   try {
     await driver.get('https://po-vol7.com/ru/cabinet/try-demo');
-    const btn = await driver.findElement(By.className('btn-skip'));
-    btnSkip = btn;
+
+    await driver.sleep(1000 * 60 )
+    // const btn = await driver.findElement(By.className('btn-skip'));
+    // btnSkip = btn;
   } catch {
-    const btn = await driver.findElement(By.className('js-exit'));
-    btnSkip = btn;
+    // const btn = await driver.findElement(By.className('js-exit'));
+    // btnSkip = btn;
   }
 
-  await btnSkip.click();
+  // await btnSkip.click();
 
-  const currentValute = await driver.findElement(
-    By.className('current-symbol')
-  );
+  // const currentValute = await driver.findElement(
+  //   By.className('current-symbol')
+  // );
 
-  await currentValute.click();
+  // await currentValute.click();
 
-  const curCompany = await driver.findElement(
-    By.xpath(
-      `//span[contains(@class, 'assets-block__nav-item-label') and contains(text(), '${company}')]`
-    )
-  );
+  // const curCompany = await driver.findElement(
+  //   By.xpath(
+  //     `//span[contains(@class, 'assets-block__nav-item-label') and contains(text(), '${company}')]`
+  //   )
+  // );
 
-  await curCompany.click();
+  // await curCompany.click();
 
-  const curPair = await driver.findElement(
-    By.xpath(
-      `//span[contains(@class, 'js-tour-asset-label alist__label') and contains(text(), '${valute}')]`
-    )
-  );
+  // const curPair = await driver.findElement(
+  //   By.xpath(
+  //     `//span[contains(@class, 'js-tour-asset-label alist__label') and contains(text(), '${valute}')]`
+  //   )
+  // );
 
-  await curPair.click();
+  // await curPair.click();
 
-  await driver.executeScript(
-    'document.querySelector(".drop-down-modal-wrap").style.display = "none"; document.elementFromPoint(100, 100).click()'
-  );
+  // await driver.executeScript(
+  //   'document.querySelector(".drop-down-modal-wrap").style.display = "none"; document.elementFromPoint(100, 100).click()'
+  // );
 
-  const types = await driver.findElement(
-    By.className('tooltip2 items__link items__link--chart-type')
-  );
+  // const types = await driver.findElement(
+  //   By.className('tooltip2 items__link items__link--chart-type')
+  // );
 
-  await types.click();
+  // await types.click();
 
-  const type = await driver.findElement(
-    By.xpath(`//span[contains(text(), 'Свечи')]`)
-  );
+  // const type = await driver.findElement(
+  //   By.xpath(`//span[contains(text(), 'Свечи')]`)
+  // );
 
-  await type.click();
+  // await type.click();
 
-  const interval = await driver.findElement(
-    By.xpath(
-      `//ul[contains(@class, 'list-links')]/li/a/span[contains(text(), '${times[period]}')]`
-    )
-  );
+  // const interval = await driver.findElement(
+  //   By.xpath(
+  //     `//ul[contains(@class, 'list-links')]/li/a/span[contains(text(), '${times[period]}')]`
+  //   )
+  // );
 
-  await interval.click();
+  // await interval.click();
 
-  await driver.executeScript(
-    'document.querySelector(".drop-down-modal-wrap").style.display = "none"; document.elementFromPoint(100, 100).click()'
-  );
+  // await driver.executeScript(
+  //   'document.querySelector(".drop-down-modal-wrap").style.display = "none"; document.elementFromPoint(100, 100).click()'
+  // );
 
   const valueTime = await driver.findElement(By.className('value__val'));
 
@@ -98,29 +100,30 @@ async function init() {
 
   await driver
     .findElement(By.xpath(`//div[contains(@class, 'value__val')]/input`))
-    .sendKeys(Key.chord(Key.CONTROL, 'a'), `${start}`);
+    .sendKeys(Key.chord(Key.CONTROL, 'a'), `${initSum}`);
 
   const curStart = await driver
     .findElement(By.xpath(`//div[contains(@class, 'value__val')]/input`))
     .getAttribute('value');
 
-  if (curStart !== `$${resultStart}`) {
+  if (curStart !== `$${initSum}`) {
     throw new Error('Ставка забаговалась');
   }
 
-  const hotKeys = await driver.findElement(
-    By.className('hotkeys-icon tooltip2')
-  );
+  // const hotKeys = await driver.findElement(
+  //   By.className('hotkeys-icon tooltip2')
+  // );
 
-  await hotKeys.click();
+  // await hotKeys.click();
 
-  const activeHotKeys = await driver.findElement(
-    By.xpath('//a[contains(text(), "Включить горячие клавиши")]')
-  );
+  // const activeHotKeys = await driver.findElement(
+  //   By.xpath('//a[contains(text(), "Включить горячие клавиши")]')
+  // );
 
-  await activeHotKeys.click();
+  // await activeHotKeys.click();
+  
 
-  return {start, koef, period};
+  return {initSum, koef, period, valueTime, puncts};
 }
 
 module.exports = init;
