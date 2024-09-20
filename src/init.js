@@ -4,11 +4,14 @@ const { By, Key } = require('selenium-webdriver');
 // node src/test.js
 
 const initSum = 10; // минимальная ставка
-const puncts = 20 //макс. разница в пунтках за секунду до закрытия (если меньше, то ждет закрытия сделки)
-const finish = 1; // максимальная ставка
 const koef = 2; // коэффициент умножения
+const puncts = 20 //макс. разница в пунтках за секунду до закрытия (если меньше, то ждет закрытия сделки)
+const period = 30; // время свечи
+const switchVersionCount = 2 // кол-во проигрышей для перехода на другую версию
+const pauseTime = 2 // кол-во минут паузы
+
+const finish = 1; // максимальная ставка
 const time = 15; // время сделки
-const period = 15; // время свечи
 const company = 'Криптовалюты'; // название раздела один в один как написано на сайте
 const valute = 'Bitcoin OTC'; // название пары на торги один в один как написано на сайте
 
@@ -28,7 +31,7 @@ async function init() {
   try {
     await driver.get('https://po-vol7.com/ru/cabinet/try-demo');
 
-    await driver.sleep(1000 * 60 )
+    // await driver.sleep(1000 * 60 )
     // const btn = await driver.findElement(By.className('btn-skip'));
     // btnSkip = btn;
   } catch {
@@ -88,27 +91,27 @@ async function init() {
   //   'document.querySelector(".drop-down-modal-wrap").style.display = "none"; document.elementFromPoint(100, 100).click()'
   // );
 
-  const valueTime = await driver.findElement(By.className('value__val'));
+  // const valueTime = await driver.findElement(By.className('value__val'));
 
-  await valueTime.click();
+  // await valueTime.click();
 
-  const findTime = await driver.findElement(
-    By.xpath(`//div[contains(text(), '${times[time]}')]`)
-  );
+  // const findTime = await driver.findElement(
+  //   By.xpath(`//div[contains(text(), '${times[time]}')]`)
+  // );
 
-  await findTime.click();
+  // await findTime.click();
 
-  await driver
-    .findElement(By.xpath(`//div[contains(@class, 'value__val')]/input`))
-    .sendKeys(Key.chord(Key.CONTROL, 'a'), `${initSum}`);
+  // await driver
+  //   .findElement(By.xpath(`//div[contains(@class, 'value__val')]/input`))
+  //   .sendKeys(Key.chord(Key.CONTROL, 'a'), `${initSum}`);
 
-  const curStart = await driver
-    .findElement(By.xpath(`//div[contains(@class, 'value__val')]/input`))
-    .getAttribute('value');
+  // const curStart = await driver
+  //   .findElement(By.xpath(`//div[contains(@class, 'value__val')]/input`))
+  //   .getAttribute('value');
 
-  if (curStart !== `$${initSum}`) {
-    throw new Error('Ставка забаговалась');
-  }
+  // if (curStart !== `$${initSum}`) {
+  //   throw new Error('Ставка забаговалась');
+  // }
 
   // const hotKeys = await driver.findElement(
   //   By.className('hotkeys-icon tooltip2')
@@ -123,7 +126,7 @@ async function init() {
   // await activeHotKeys.click();
   
 
-  return {initSum, koef, period, valueTime, puncts};
+  return {initSum, koef, period, puncts, switchVersionCount, pauseTime};
 }
 
 module.exports = init;
